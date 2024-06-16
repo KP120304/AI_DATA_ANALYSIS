@@ -11,9 +11,9 @@ It allows users to preprocess data and then obtain the required graph plot
 
 ## Requirements
 
-- Streamlit
-- Pandas
-- PandasAI
+- streamlit
+- pandas
+- pandasa
 - chat2plot
 - langchain_openai
 - os
