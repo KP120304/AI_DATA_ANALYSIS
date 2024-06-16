@@ -13,7 +13,7 @@ It allows users to preprocess data and then obtain the required graph plot
 
 - streamlit
 - pandas
-- pandasa
+- pandasai
 - chat2plot
 - langchain_openai
 - os
