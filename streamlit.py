@@ -1,11 +1,10 @@
 import os
 import pandas as pd
-from pandasai.smart_dataframe import SmartDataframe
+from pandasai import SmartDataframe
 from pandasai.llm.openai import OpenAI
 from chat2plot import chat2plot
 import streamlit as st
 from langchain_openai import AzureChatOpenAI
-
 
 
 # Set your OpenAI API key
@@ -104,8 +103,7 @@ if uploaded_file is not None:
         and avoid instantiating an instance within the function itself everytime'''
         #llm = OpenAI(api_token=os.environ["PANDASAI_API_KEY"])
         llm = AzureChatOpenAI(openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
-                              azure_deployment=os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT_NAME"]
-                            )
+                              azure_deployment=os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT_NAME"])
         processed_df = preprocess_pandasai(df, llm)
         
         st.write("\n\n")
