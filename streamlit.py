@@ -10,10 +10,10 @@ from langchain_openai import AzureChatOpenAI
 # Set your OpenAI API key
 #os.environ["PANDASAI_API_KEY"] = 'Your API key'  # add API key
 
-os.environ["AZURE_OPENAI_API_KEY"] = "b9135a15c242432cb20ddc43fea3a413"
-os.environ["AZURE_OPENAI_ENDPOINT"] = "https://openai-oe.openai.azure.com/"
-os.environ["AZURE_OPENAI_API_VERSION"] = "2023-06-01-preview"
-os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT_NAME"] = "gpt-35-turbo"
+os.environ["AZURE_OPENAI_API_KEY"] = 'Your AZURE API key'
+os.environ["AZURE_OPENAI_ENDPOINT"] = 'Your AZURE ENDPOINT'
+os.environ["AZURE_OPENAI_API_VERSION"] = 'Your AZURE API VERSION'
+os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT_NAME"] = 'Your AZURE OPEAI DEPLOYMENT NAME'
 
 
 @st.cache_data
@@ -113,6 +113,7 @@ if uploaded_file is not None:
         st.write("\n\n")
         st.subheader("Chat2Plot")
         plot_chat2plot(processed_df, llm)
+
 
 
     
