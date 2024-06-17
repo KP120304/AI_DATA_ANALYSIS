@@ -1,0 +1,6 @@
+streamlit
+pandas
+pandasai
+chat2plot
+langchain-openai
+python-dotenv
