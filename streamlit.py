@@ -1,20 +1,18 @@
 import os
 import pandas as pd
-from pandasai import SmartDataframe
+from pandasai.smart_dataframe import SmartDataframe
+from pandasai import SmartDatalake
 from pandasai.llm.openai import OpenAI
 from chat2plot import chat2plot
 import streamlit as st
 from langchain_openai import AzureChatOpenAI
+from dotenv import load_dotenv
 
-
-# Set your OpenAI API key
-#os.environ["PANDASAI_API_KEY"] = 'Your API key'  # add API key
-
-os.environ["AZURE_OPENAI_API_KEY"] = 'Your AZURE API key'
-os.environ["AZURE_OPENAI_ENDPOINT"] = 'Your AZURE ENDPOINT'
-os.environ["AZURE_OPENAI_API_VERSION"] = 'Your AZURE API VERSION'
-os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT_NAME"] = 'Your AZURE OPEAI DEPLOYMENT NAME'
-
+load_dotenv()
+AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")[1:]
+AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
+AZURE_OPENAI_API_VERSION = os.getenv("OPENAI_API_VERSION")
+AZURE_OPENAI_CHAT_DEPLOYMENT_NAME = os.getenv("OPEN_AI_DEPLOYMENT_NAME")
 
 @st.cache_data
 def load_csv(file):
@@ -36,15 +34,17 @@ def load_csv(file):
     return None
 
 
-def preprocess_pandasai(dataframe, language_model):
+def preprocess_pandasai(dataframe, language_model, f_key):
     """Preprocess the DataFrame using PandasAI."""
 
     #create an instance of the SmartDataframe class
-    smart_df = SmartDataframe(dataframe, config={"llm": language_model})
+    smart_df = SmartDatalake(dataframe, config={"llm": language_model})
+    # lake = SmartDatalake([df1, df1], config={"llm": language_model})
     st.write("\n\n")
-    prompt = st.text_input("Describe the preprocessing task (leave empty to finish):")
+    prompt_key = f"preprocess_{f_key}"
+    prompt = st.text_input("Describe the preprocessing task (leave empty to finish):", key=prompt_key)
     st.write("\n")
-    if prompt:
+    if prompt != "Describe the preprocessing task (leave empty to finish):":
         try:
             st.markdown(f":blue[Processing task:] {prompt}")
             st.write("\n\n\n")
@@ -63,15 +63,16 @@ def preprocess_pandasai(dataframe, language_model):
     return dataframe
 
 
-def plot_chat2plot(dataframe, language_model):
+def plot_chat2plot(dataframe, language_model, f_key):
     """Plot the DataFrame using chat2plot."""
-    prompt = st.text_input("Describe the plotting task (leave empty to finish):")
+    prompt_key = f"plot_{f_key}"
+    prompt = st.text_input("Describe the plotting task (leave empty to finish):", key=prompt_key)
     st.write("\n")
     if prompt:
         try:
             st.markdown(f":blue[Plotting task:] {prompt}")
             st.write("\n\n\n")
-            c2p = chat2plot(dataframe, chat=llm)  #Creates an instance of Chat2Plot.
+            c2p = chat2plot(dataframe, chat=language_model)  #Creates an instance of Chat2Plot.
             result = c2p(prompt) #contains the final result after executing the prompt
             st.plotly_chart(result.figure, use_container_width=True)  #use Plotly package to plot
             st.success("Task has been completed successfully!")
@@ -84,38 +85,38 @@ def plot_chat2plot(dataframe, language_model):
         except Exception as e:
             st.error(f"The plotting task has run into an error: {e}")
 
-# Streamlit app
+# Streamlit app setup
 st.title("PandasAI Data Preprocessing and Chat2Plot Plotting App")
-st.markdown(":green[**This app will allow you to preprocess data and plot dataframes using AI LLM libraries**]")
+st.markdown(":green[**This app allows you to preprocess and plot dataframes using AI LLM libraries**]")
 st.write("\n\n")
 
-# File upload
-st.subheader("PandasAI")
-uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
-if uploaded_file is not None:
-    df = load_csv(uploaded_file)
-    if df is not None:
-        st.write("\n\n")
-        st.markdown(":red[**Original CSV DataFrame:**]")
-        st.write(df)
-        
-        '''creating an instance of the OpenAI llm and passing it as argument to save resounces
-        and avoid instantiating an instance within the function itself everytime'''
-        #llm = OpenAI(api_token=os.environ["PANDASAI_API_KEY"])
-        llm = AzureChatOpenAI(openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
-                              azure_deployment=os.environ["AZURE_OPENAI_CHAT_DEPLOYMENT_NAME"])
-        processed_df = preprocess_pandasai(df, llm)
-        
-        st.write("\n\n")
-        st.markdown(":red[**Processed CSV DataFrame:**]")
-        st.write(processed_df)
-        
-        st.write("\n\n")
-        st.subheader("Chat2Plot")
-        plot_chat2plot(processed_df, llm)
+# Multiple file upload
+uploaded_files = st.file_uploader("Upload your CSV files", type=["csv"], accept_multiple_files=True)
 
+if uploaded_files:
+    for index, uploaded_file in enumerate(uploaded_files):
+        st.subheader(f"File: {uploaded_file.name}")
+        df = load_csv(uploaded_file)
+        if df is not None:
+            st.write(df)
+            
+            # LLM instance creation
+            llm = AzureChatOpenAI(
+                azure_endpoint=AZURE_OPENAI_ENDPOINT,
+                openai_api_version=AZURE_OPENAI_API_VERSION,
+                deployment_name=AZURE_OPENAI_CHAT_DEPLOYMENT_NAME,
+                openai_api_key=AZURE_OPENAI_API_KEY
+            )
 
+            # Preprocess and display DataFrame
+            file_key = f"{uploaded_file.name}_{index}" #file_key is required to create seperate instances of widgets with unique keys
+            processed_df = preprocess_pandasai(df, llm, file_key)
+            if processed_df is not None:
+                st.markdown(":red[**Processed DataFrame:**]")
+                st.write(processed_df)
 
-    
-
-
+            # Plotting
+            st.subheader("Plot")
+            plot_chat2plot(processed_df, llm, file_key)
+else:
+    st.markdown(":red[**Please upload one or more CSV files.**]")
